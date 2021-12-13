@@ -37,7 +37,7 @@ class SFGUI_API ToggleButton : public Button {
 	protected:
 		std::unique_ptr<RenderQueue> InvalidateImpl() const override;
 
-		void HandleMouseClick( sf::Mouse::Button button, int x, int y ) override;
+		bool HandleMouseClick( sf::Mouse::Button button, int x, int y ) override;
 
 		/** Ctor.
 		 */

@@ -53,12 +53,13 @@ void RadioButton::SetActive( bool active ) {
 	ToggleButton::SetActive( active );
 }
 
-void RadioButton::HandleMouseClick( sf::Mouse::Button button, int x, int y ) {
+bool RadioButton::HandleMouseClick( sf::Mouse::Button button, int x, int y ) {
 	if( !IsActive() && ( button == sf::Mouse::Left ) ) {
 		SetActive( true );
 	}
 
 	Button::HandleMouseClick( button, x, y );
+	return true;
 }
 
 const std::string& RadioButton::GetName() const {

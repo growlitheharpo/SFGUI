@@ -272,9 +272,10 @@ void ComboBox::HandleMouseMoveEvent( int x, int y ) {
 	}
 }
 
-void ComboBox::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
+bool ComboBox::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
+	bool handled = false;
 	if( ( x == std::numeric_limits<int>::min() ) || ( y == std::numeric_limits<int>::min() ) ) {
-		return;
+		return handled;
 	}
 
 	if( GetState() == State::ACTIVE ) {
@@ -297,12 +298,12 @@ void ComboBox::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int
 			scrollbar_allocation.top += GetAllocation().top;
 
 			if( scrollbar_allocation.contains( static_cast<float>( x ), static_cast<float>( y ) ) ) {
-				return;
+				return handled;
 			}
 		}
 
 		if( !press || ( button != sf::Mouse::Left ) ) {
-			return;
+			return handled;
 		}
 
 		auto emit_select = false;
@@ -324,10 +325,10 @@ void ComboBox::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int
 		Invalidate();
 
 		if( emit_select ) {
-			GetSignals().Emit( OnSelect );
+			handled = GetSignals().Emit( OnSelect );
 		}
 
-		return;
+		return handled;
 	}
 
 	if( press && ( button == sf::Mouse::Left ) && IsMouseInWidget() ) {
@@ -336,8 +337,10 @@ void ComboBox::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int
 		SetState( State::ACTIVE );
 
 		Invalidate();
-		GetSignals().Emit( OnOpen );
+		handled = GetSignals().Emit( OnOpen );
 	}
+
+	return handled;
 }
 
 sf::Vector2f ComboBox::CalculateRequisition() {
@@ -410,20 +413,21 @@ void ComboBox::HandleStateChange( State old_state ) {
 
 			auto weak_this = std::weak_ptr<Widget>( shared_from_this() );
 
-			m_scrollbar->GetAdjustment()->GetSignal( Adjustment::OnChange ).Connect( [weak_this] {
+			m_scrollbar->GetAdjustment()->GetSignal( Adjustment::OnChange ).Connect( [weak_this] (bool) {
 				auto shared_this = weak_this.lock();
 
 				if( !shared_this ) {
-					return;
+					return false;
 				}
 
 				auto combo_box = std::dynamic_pointer_cast<ComboBox>( shared_this );
 
 				if( !combo_box ) {
-					return;
+					return false;
 				}
 
 				combo_box->ChangeStartEntry();
+				return false;
 			} );
 
 			m_scrollbar->SetZOrder( 2 );

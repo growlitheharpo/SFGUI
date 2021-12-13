@@ -130,15 +130,18 @@ const std::string& Window::GetName() const {
 	return name;
 }
 
-void Window::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
+bool Window::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
+	bool handled = false;
+
 	if( button != sf::Mouse::Left ) {
-		return;
+		return handled;
 	}
 
 	if( !press ) {
+		handled = (m_dragging || m_resizing);
 		m_dragging = false;
 		m_resizing = false;
-		return;
+		return handled;
 	}
 
 	unsigned int title_font_size( Context::Get().GetEngine().GetProperty<unsigned int>( "FontSize", shared_from_this() ) );
@@ -171,11 +174,12 @@ void Window::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x
 				);
 
 				if( close_rect.contains( static_cast<float>( x ), static_cast<float>( y ) ) ) {
-					GetSignals().Emit( OnCloseButton );
-					return;
+					handled = GetSignals().Emit( OnCloseButton ) || handled;
+					return handled;
 				}
 			}
 
+			handled = true;
 			m_dragging = true;
 			m_resizing = false;
 
@@ -196,6 +200,7 @@ void Window::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x
 		if( area.contains( static_cast<float>( x ), static_cast<float>( y ) ) ) {
 			m_dragging = false;
 			m_resizing = true;
+			handled = true;
 
 			m_drag_offset = sf::Vector2f(
 				handle_size - static_cast<float>( x ) + GetAllocation().left + GetAllocation().width - handle_size,
@@ -204,6 +209,7 @@ void Window::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x
 		}
 	}
 
+	return handled;
 }
 
 void Window::HandleMouseMoveEvent( int x, int y ) {

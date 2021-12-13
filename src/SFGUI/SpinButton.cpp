@@ -72,12 +72,13 @@ bool SpinButton::IsIncreaseStepperPressed() const {
 	return m_increase_pressed;
 }
 
-void SpinButton::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
+bool SpinButton::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y ) {
 	float border_width( Context::Get().GetEngine().GetProperty<float>( "BorderWidth", shared_from_this() ) );
 	float stepper_aspect_ratio( Context::Get().GetEngine().GetProperty<float>( "StepperAspectRatio", shared_from_this() ) );
 
+	bool handled = false;
 	if( button != sf::Mouse::Left ) {
-		return;
+		return handled;
 	}
 
 	auto stepper_height = ( GetAllocation().height / 2.f ) - border_width;
@@ -101,7 +102,9 @@ void SpinButton::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, i
 			m_repeat_wait = true;
 
 			Invalidate();
-			return;
+			handled = true;
+
+			return handled;
 		}
 
 		// Bottom stepper.
@@ -117,7 +120,9 @@ void SpinButton::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, i
 			m_repeat_wait = true;
 
 			Invalidate();
-			return;
+			handled = true;
+
+			return handled;
 		}
 	}
 	else {
@@ -127,9 +132,12 @@ void SpinButton::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, i
 
 		m_decrease_pressed = false;
 		m_increase_pressed = false;
+		handled = true;
+
+		return handled;
 	}
 
-	Entry::HandleMouseButtonEvent( button, press, x, y );
+	return Entry::HandleMouseButtonEvent( button, press, x, y );
 }
 
 void SpinButton::HandleUpdate( float seconds ) {
@@ -166,33 +174,37 @@ void SpinButton::HandleUpdate( float seconds ) {
 	}
 }
 
-void SpinButton::HandleTextEvent( sf::Uint32 character ) {
+bool SpinButton::HandleTextEvent( sf::Uint32 character ) {
 	if( isdigit( static_cast<int>( character ) ) ) {
-		Entry::HandleTextEvent( character );
-		return;
+		return Entry::HandleTextEvent( character );
 	}
 
 	if( ( character == '.' ) && ( GetText().find( "." ) == sf::String::InvalidPos ) ) {
-		Entry::HandleTextEvent( character );
-		return;
+		return Entry::HandleTextEvent( character );
 	}
 
 	if( ( character == '-' ) && ( GetText().find( "-" ) == sf::String::InvalidPos ) && ( GetCursorPosition() == 0 ) ) {
-		Entry::HandleTextEvent( character );
-		return;
+		return Entry::HandleTextEvent( character );
 	}
+
+	return false;
 }
 
-void SpinButton::HandleKeyEvent( sf::Keyboard::Key key, bool press ) {
-	Entry::HandleKeyEvent( key, press );
+bool SpinButton::HandleKeyEvent( sf::Keyboard::Key key, bool press ) {
+	bool handled = false;
+
+	handled = Entry::HandleKeyEvent( key, press );
 
 	if( !press || !HasFocus() ) {
-		return;
+		return handled;
 	}
 
 	if( key == sf::Keyboard::Return ) {
 		GrabFocus( Widget::Ptr() );
+		handled = true;
 	}
+
+	return handled;
 }
 
 void SpinButton::HandleSizeChange() {
@@ -230,20 +242,21 @@ void SpinButton::SetAdjustment( Adjustment::Ptr adjustment ) {
 
 	auto weak_this = std::weak_ptr<Widget>( shared_from_this() );
 
-	m_adjustment_signal_serial = m_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] {
+	m_adjustment_signal_serial = m_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] (bool) {
 		auto shared_this = weak_this.lock();
 
 		if( !shared_this ) {
-			return;
+			return false;
 		}
 
 		auto spin_button = std::dynamic_pointer_cast<SpinButton>( shared_this );
 
 		if( !spin_button ) {
-			return;
+			return false;
 		}
 
 		spin_button->UpdateTextFromAdjustment();
+		return true;
 	} );
 
 	UpdateTextFromAdjustment();

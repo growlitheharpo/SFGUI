@@ -70,10 +70,12 @@ void Viewport::HandleAbsolutePositionChange() {
 	Container::HandleAbsolutePositionChange();
 }
 
-void Viewport::HandleEvent( const sf::Event& event ) {
+bool Viewport::HandleEvent( const sf::Event& event ) {
+	bool handled = false;
+
 	// Ignore event when widget is not visible.
 	if( !IsGloballyVisible() ) {
-		return;
+		return handled;
 	}
 
 	// Pass event to child
@@ -92,7 +94,7 @@ void Viewport::HandleEvent( const sf::Event& event ) {
 			altered_event.mouseButton.x += static_cast<int>( offset_x );
 			altered_event.mouseButton.y += static_cast<int>( offset_y );
 
-			GetChild()->HandleEvent( altered_event );
+			handled = GetChild()->HandleEvent( altered_event ) || handled;
 		} break;
 		case sf::Event::MouseLeft: {
 			// Nice hack to cause scrolledwindow children to get out of
@@ -100,7 +102,7 @@ void Viewport::HandleEvent( const sf::Event& event ) {
 			sf::Event altered_event( event );
 			altered_event.mouseMove.x = -1;
 			altered_event.mouseMove.y = -1;
-			GetChild()->HandleEvent( altered_event );
+			handled = GetChild()->HandleEvent( altered_event ) || handled;
 		} break;
 		case sf::Event::MouseMoved: { // All MouseMove events
 			sf::Event altered_event( event );
@@ -114,7 +116,7 @@ void Viewport::HandleEvent( const sf::Event& event ) {
 				altered_event.mouseMove.x += static_cast<int>( offset_x );
 				altered_event.mouseMove.y += static_cast<int>( offset_y );
 			}
-			GetChild()->HandleEvent( altered_event );
+			handled = GetChild()->HandleEvent( altered_event ) || handled;
 		} break;
 		case sf::Event::MouseWheelMoved: { // All MouseWheel events
 			if( !GetAllocation().contains( static_cast<float>( event.mouseWheel.x ), static_cast<float>( event.mouseWheel.y ) ) ) {
@@ -125,13 +127,15 @@ void Viewport::HandleEvent( const sf::Event& event ) {
 			altered_event.mouseWheel.x += static_cast<int>( offset_x );
 			altered_event.mouseWheel.y += static_cast<int>( offset_y );
 
-			GetChild()->HandleEvent( altered_event );
+			handled = GetChild()->HandleEvent( altered_event ) || handled;
 		} break;
 		default: { // Pass event unaltered if it is a non-mouse event
-			GetChild()->HandleEvent( event );
+			handled = GetChild()->HandleEvent( event ) || handled;
 		} break;
 		}
 	}
+
+	return handled;
 }
 
 sf::Vector2f Viewport::GetAbsolutePosition() const {
@@ -151,20 +155,21 @@ void Viewport::SetHorizontalAdjustment( Adjustment::Ptr horizontal_adjustment ) 
 
 	auto weak_this = std::weak_ptr<Widget>( shared_from_this() );
 
-	m_horizontal_adjustment_signal_serial = m_horizontal_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] {
+	m_horizontal_adjustment_signal_serial = m_horizontal_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] (bool) {
 		auto shared_this = weak_this.lock();
 
 		if( !shared_this ) {
-			return;
+			return false;
 		}
 
 		auto viewport = std::dynamic_pointer_cast<Viewport>( shared_this );
 
 		if( !viewport ) {
-			return;
+			return false;
 		}
 
 		viewport->UpdateView();
+		return true;
 	} );
 }
 
@@ -181,20 +186,21 @@ void Viewport::SetVerticalAdjustment( Adjustment::Ptr vertical_adjustment ) {
 
 	auto weak_this = std::weak_ptr<Widget>( shared_from_this() );
 
-	m_vertical_adjustment_signal_serial = m_vertical_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] {
+	m_vertical_adjustment_signal_serial = m_vertical_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this](bool) {
 		auto shared_this = weak_this.lock();
 
 		if( !shared_this ) {
-			return;
+			return false;
 		}
 
 		auto viewport = std::dynamic_pointer_cast<Viewport>( shared_this );
 
 		if( !viewport ) {
-			return;
+			return false;
 		}
 
 		viewport->UpdateView();
+		return true;
 	} );
 }
 

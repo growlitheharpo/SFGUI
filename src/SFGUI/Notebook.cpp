@@ -455,9 +455,10 @@ void Notebook::HandleMouseMoveEvent( int x, int y ) {
 	}
 }
 
-void Notebook::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int /*x*/, int /*y*/ ) {
+bool Notebook::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int /*x*/, int /*y*/ ) {
+	bool handled = false;
 	if( ( button != sf::Mouse::Left ) ) {
-		return;
+		return handled;
 	}
 
 	float scroll_speed( Context::Get().GetEngine().GetProperty<float>( "ScrollSpeed", shared_from_this() ) );
@@ -470,23 +471,24 @@ void Notebook::HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int
 	if( m_forward_scroll_prelight && press ) {
 		m_scrolling_forward = true;
 		m_elapsed_time = ( 1.f / scroll_speed );
-		return;
+		return handled;
 	}
 	else if( m_backward_scroll_prelight && press ) {
 		m_scrolling_backward = true;
 		m_elapsed_time = ( 1.f / scroll_speed );
-		return;
+		return handled;
 	}
 
 	if( !press ) {
-		return;
+		return handled;
 	}
 
 	if( m_prelight_tab < 0 ) {
-		return;
+		return handled;
 	}
 
 	SetCurrentPage( m_prelight_tab );
+	return handled;
 }
 
 bool Notebook::HandleAdd( Widget::Ptr child ) {

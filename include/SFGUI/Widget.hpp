@@ -174,7 +174,7 @@ class SFGUI_API Widget : public Object, public std::enable_shared_from_this<Widg
 		 * containers only.
 		 * @param event SFML event.
 		 */
-		virtual void HandleEvent( const sf::Event& event );
+		virtual bool HandleEvent( const sf::Event& event );
 
 		/** Get absolute position on screen.
 		 * @return Absolute position.
@@ -350,13 +350,13 @@ class SFGUI_API Widget : public Object, public std::enable_shared_from_this<Widg
 		 * @param x Mouse X position.
 		 * @param y Mouse Y position.
 		 */
-		virtual void HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y );
+		virtual bool HandleMouseButtonEvent( sf::Mouse::Button button, bool press, int x, int y );
 
 		/** Handle key event.
 		 * @param key Key.
 		 * @param press true if button was pressed, false if released.
 		 */
-		virtual void HandleKeyEvent( sf::Keyboard::Key key, bool press );
+		virtual bool HandleKeyEvent( sf::Keyboard::Key key, bool press );
 
 		/** Handle widget (relative) position changes.
 		 */
@@ -381,7 +381,7 @@ class SFGUI_API Widget : public Object, public std::enable_shared_from_this<Widg
 		/** Handle text event.
 		 * @param character Character.
 		 */
-		virtual void HandleTextEvent( sf::Uint32 character );
+		virtual bool HandleTextEvent( sf::Uint32 character );
 
 		/** Handle mouse enter.
 		 * @param x Mouse X position.
@@ -400,7 +400,7 @@ class SFGUI_API Widget : public Object, public std::enable_shared_from_this<Widg
 		 * @param x Mouse X position.
 		 * @param y Mouse Y position.
 		 */
-		virtual void HandleMouseClick( sf::Mouse::Button button, int x, int y );
+		virtual bool HandleMouseClick( sf::Mouse::Button button, int x, int y );
 
 		/** Handle focus change.
 		 * @param focused_widget Widget currently being focused.

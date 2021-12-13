@@ -19,7 +19,7 @@ Signal& Signal::operator=( Signal&& other ) {
 	return *this;
 }
 
-unsigned int Signal::Connect( std::function<void()> delegate ) {
+unsigned int Signal::Connect( std::function<bool(bool)> delegate ) {
 	if( !m_delegates ) {
 		m_delegates.reset( new DelegateMap );
 	}
@@ -28,14 +28,18 @@ unsigned int Signal::Connect( std::function<void()> delegate ) {
 	return serial++;
 }
 
-void Signal::operator()() const {
+bool Signal::operator()() const {
+	bool result = false;
+
 	if( !m_delegates ) {
-		return;
+		return result;
 	}
 
 	for( const auto& delegate : *m_delegates ) {
-		delegate.second();
+		result = delegate.second(result) || result;
 	}
+
+	return result;
 }
 
 void Signal::Disconnect( unsigned int serial ) {
@@ -74,15 +78,15 @@ Signal& SignalContainer::operator[]( const Signal::SignalID& id ) {
 	return signal_iter->second;
 }
 
-void SignalContainer::Emit( const Signal::SignalID& id ) {
+bool SignalContainer::Emit( const Signal::SignalID& id ) {
 	if( !m_signals || !id ) {
-		return;
+		return false;
 	}
 
 	auto signal_iter = m_signals->find( id );
 
 	if( signal_iter != m_signals->end() ) {
-		signal_iter->second();
+		return signal_iter->second();
 	}
 }
 

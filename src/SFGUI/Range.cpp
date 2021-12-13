@@ -24,20 +24,21 @@ void Range::SetAdjustment( Adjustment::Ptr adjustment ) {
 	auto weak_this = std::weak_ptr<Widget>( shared_from_this() );
 
 	// Connect change signal.
-	m_change_connection = m_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] {
+	m_change_connection = m_adjustment->GetSignal( Adjustment::OnChange ).Connect( [weak_this] (bool) {
 		auto shared_this = weak_this.lock();
 
 		if( !shared_this ) {
-			return;
+			return false;
 		}
 
 		auto range = std::dynamic_pointer_cast<Range>( shared_this );
 
 		if( !range ) {
-			return;
+			return false;
 		}
 
 		range->HandleAdjustmentChange();
+		return false;
 	} );
 }
 

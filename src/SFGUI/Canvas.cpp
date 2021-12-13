@@ -228,7 +228,7 @@ Canvas::Canvas( bool depth ) :
 	m_custom_viewport = Renderer::Get().CreateViewport();
 	SetViewport( m_custom_viewport );
 
-	m_custom_draw_callback->Connect( [this] { DrawRenderTexture(); } );
+	m_custom_draw_callback->Connect( [this] (bool) { DrawRenderTexture(); return false; } );
 
 	static auto checked = false;
 

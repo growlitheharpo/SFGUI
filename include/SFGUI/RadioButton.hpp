@@ -43,7 +43,7 @@ class SFGUI_API RadioButton : public CheckButton {
 		 */
 		RadioButton() = default;
 
-		void HandleMouseClick( sf::Mouse::Button button, int x, int y ) override;
+		bool HandleMouseClick( sf::Mouse::Button button, int x, int y ) override;
 
 	private:
 		std::shared_ptr<RadioButtonGroup> m_group;
